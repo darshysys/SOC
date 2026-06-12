@@ -2,6 +2,7 @@ import cv2
 import zipfile
 import numpy as np
 import matpltolib as plt
+from sklearn.decomposition import PCA
 
 faces = {}
 with zipfile.ZipFile("attface.zip") as facezip:
@@ -18,6 +19,9 @@ for i in range(16):
     axes[i%4][i//4].imshow(faceimages[i], cmap="gray")
 print("Showing sample faces")
 plt.show()
+
+faceshape = list(faces.values())[0].shape
+print("Face image shape:", faceshape)
 
 classes = set(filename.split("/")[0] for filename in faces.keys())
 print("Number of classes:", len(classes))
@@ -57,6 +61,20 @@ print("Shape of the weight matrix:", weights.shape)
  
 # Test on out-of-sample image of existing class
 query = faces["s39/10.pgm"].reshape(1,-1)
+query_weight = eigenfaces @ (query - pca.mean_).T
+euclidean_distance = np.linalg.norm(weights - query_weight, axis=0)
+best_match = np.argmin(euclidean_distance)
+print("Best match %s with Euclidean distance %f" % (facelabel[best_match], euclidean_distance[best_match]))
+# Visualize
+fig, axes = plt.subplots(1,2,sharex=True,sharey=True,figsize=(8,6))
+axes[0].imshow(query.reshape(faceshape), cmap="gray")
+axes[0].set_title("Query")
+axes[1].imshow(facematrix[best_match].reshape(faceshape), cmap="gray")
+axes[1].set_title("Best match")
+plt.show()
+
+# Test on out-of-sample image of new class
+query = faces["s40/1.pgm"].reshape(1,-1)
 query_weight = eigenfaces @ (query - pca.mean_).T
 euclidean_distance = np.linalg.norm(weights - query_weight, axis=0)
 best_match = np.argmin(euclidean_distance)
