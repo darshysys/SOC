@@ -50,3 +50,21 @@ for i in range(16):
     axes[i%4][i//4].imshow(eigenfaces[i].reshape(faceshape), cmap="gray")
 print("Showing the eigenfaces")
 plt.show()
+
+# Generate weights as a KxN matrix where K is the number of eigenfaces and N the number of samples
+weights = eigenfaces @ (facematrix - pca.mean_).T
+print("Shape of the weight matrix:", weights.shape)
+ 
+# Test on out-of-sample image of existing class
+query = faces["s39/10.pgm"].reshape(1,-1)
+query_weight = eigenfaces @ (query - pca.mean_).T
+euclidean_distance = np.linalg.norm(weights - query_weight, axis=0)
+best_match = np.argmin(euclidean_distance)
+print("Best match %s with Euclidean distance %f" % (facelabel[best_match], euclidean_distance[best_match]))
+# Visualize
+fig, axes = plt.subplots(1,2,sharex=True,sharey=True,figsize=(8,6))
+axes[0].imshow(query.reshape(faceshape), cmap="gray")
+axes[0].set_title("Query")
+axes[1].imshow(facematrix[best_match].reshape(faceshape), cmap="gray")
+axes[1].set_title("Best match")
+plt.show()
